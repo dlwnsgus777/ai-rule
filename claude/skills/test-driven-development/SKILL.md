@@ -123,6 +123,20 @@ Never skip this step.
 
 ------------------------------------------------------------------------
 
+## CHECKPOINT: RED Complete — Request Feedback (Mandatory)
+
+After RED, you MUST stop and do the following:
+
+1.  Show the written test code to the user.
+2.  Request feedback in this format:
+
+> "Could you provide feedback on this test?
+> I'd especially appreciate input on [test case coverage / missing scenarios]."
+
+3.  Do NOT proceed to GREEN without the user's **explicit approval**.
+
+------------------------------------------------------------------------
+
 ## GREEN -- Minimal Production Code
 
 ``` java
@@ -145,6 +159,20 @@ Only implement what the test requires. Nothing more.
 
 ------------------------------------------------------------------------
 
+## CHECKPOINT: GREEN Complete — Request Feedback (Mandatory)
+
+After GREEN, you MUST stop and do the following:
+
+1.  Show the written implementation code to the user.
+2.  Request feedback in this format:
+
+> "Could you provide feedback on this implementation?
+> I'd especially appreciate input on [design decisions / edge case handling]."
+
+3.  Do NOT proceed to REFACTOR without the user's **explicit approval**.
+
+------------------------------------------------------------------------
+
 ## REFACTOR -- Improve Structure
 
 After all tests are green:
@@ -156,6 +184,20 @@ After all tests are green:
 -   Simplify structure
 
 Behavior must not change.
+
+------------------------------------------------------------------------
+
+## CHECKPOINT: REFACTOR Complete — Request Feedback (Mandatory)
+
+After REFACTOR, you MUST stop and do the following:
+
+1.  Show the before/after diff of the refactoring to the user.
+2.  Request feedback in this format:
+
+> "Could you provide feedback on this refactoring?
+> I'd especially appreciate input on [structural changes / naming]."
+
+3.  Do NOT proceed to the next cycle (RED) without the user's **explicit approval**.
 
 ------------------------------------------------------------------------
 
