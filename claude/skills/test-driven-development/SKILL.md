@@ -36,6 +36,29 @@ Violating the letter of these rules is violating the spirit of TDD.
 -   Generated code
 -   Pure configuration files
 
+### Do NOT Write Tests For
+
+-   **Simple object creation** — constructors, static factory methods, or builders that only assign fields. These have no behavior to verify.
+-   **Trivial getters/setters** — if the only assertion is `assertThat(obj.getName()).isEqualTo("name")` after setting it, the test adds no value.
+-   **Data classes / DTOs / records** — plain data holders without business logic do not need tests.
+
+    ```java
+    // ❌ Do not test this — no behavior
+    @Test
+    void createOrder() {
+        Order order = new Order("id", "userId");
+        assertThat(order.getId()).isEqualTo("id");
+    }
+
+    // ✅ Test this — business behavior exists
+    @Test
+    void order_is_cancelled_when_payment_fails() {
+        Order order = new Order("id", "userId");
+        order.cancelDueToPaymentFailure();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+    ```
+
 Thinking "skip TDD just this once"?\
 That's rationalization. Stop.
 
