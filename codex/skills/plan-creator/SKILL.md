@@ -3,97 +3,64 @@ name: plan-creator
 description: Writes a structured Markdown plan document for any task, feature, or project.
   Use when the user requests a "계획 문서", "구현 계획", "실행 계획", "계획 MD로 정리",
   "계획서 작성", or "plan document".
+  Also trigger when the user says things like "[filename].md 만들어서 계획 작성",
+  "task.md에 계획 써줘", "[파일명].md로 계획 정리", or any variation of
+  "만들어서 계획을 작성" — i.e., when they want a plan written into a specific .md file.
+  Also trigger on "계획을 작성해줘", "계획 작성해줘", "계획 작성", "계획을 써줘",
+  or any Korean sentence containing "계획" combined with a writing intent verb
+  ("작성", "써줘", "정리", "만들어줘") — even if no specific file is mentioned.
 ---
 
 # Plan Creator
 
-## When to Use
-
-Trigger this skill when the user asks to write, create, or organize a plan, implementation plan,
-or execution plan as a Markdown document.
-
 ## Process
 
-### Step 1: Gather Info
+### Step 1: Context Gathering
 
-Before writing, confirm:
+Scan the relevant module's existing code first — controllers, services, domain models, and similar features. This makes your questions targeted rather than generic.
 
-- Title and purpose of the plan
-- Background or problem being solved
-- Key steps or phases (if already known)
-- Any constraints, dependencies, or scope boundaries
+### Step 2: Clarifying Questions
 
-If any of these are unclear, **ask first**. Do not generate the document without sufficient context.
+**Ask questions BEFORE writing the document.** If code analysis reveals any decision points or scope ambiguities, do NOT leave them as notes like "별도 확인 필요" inside the document. Instead, ask the user via `AskUserQuestion` first, then write the document after receiving answers.
 
-### Step 2: Write the Plan Document
+Situations that require asking:
+- Scope decisions (e.g., "A has the same issue — fix it together or separately?")
+- Multiple valid implementation approaches
+- Ambiguous requirements or missing information
 
-Use the fixed template below. Fill every section — omit only if truly not applicable.
+Use `AskUserQuestion` to ask 3–5 questions **in a single call** with **lettered options (A / B / C / D)**. All questions must be written in Korean. Cover: goal/problem, affected modules, API style, data source, and success definition.
 
-- Goals and Tasks → use checkboxes (`- [ ]`)
-- Each step → include a code snippet if the task involves code or configuration
-- Scope → table format
+Format:
+```
+Q1. 구현 방식을 선택해 주세요:
+A) 신규 REST API 엔드포인트 추가
+B) 기존 API 응답 필드 확장
+C) 배치 작업 추가
+D) 내부 서비스 로직 변경만
+```
 
-### Step 3: Request Feedback (Mandatory)
+Wait for answers before writing the plan.
 
-After writing the document, stop and ask:
+### Step 3: Write the Plan Document
 
-> "Could you provide feedback on this plan document?
-> I'd especially appreciate input on [step structure / missing items / scope]."
+Read and use the template from `assets/plan-template.md` — fill every section, omit only if truly not applicable.
+
+The template is structured for Spring Boot API feature planning:
+- **1. Feature Overview**: Include a screen/function composition table — one row per UI section or feature unit
+- **2. API Design**: One subsection per endpoint with Request/Response JSON examples; explicitly cover edge cases (null, empty, etc.)
+- **3. Business Logic**: Numbered subsections for each logic area; use a mapping table when status values or enums need display labels
+- **4. Implementation Files**: List target classes per module + a package directory tree
+- **5. Considerations & Questions**: Numbered list of items needing confirmation, each with an alternative option if applicable
+- **6. Implementation Order (TDD)**: Checkbox list defining the build sequence
+- **7. Acceptance Criteria**: Final verification checklist
+
+For non-API work (batch jobs, refactoring, etc.), omit sections that don't apply (e.g., API Design) and fill in the rest.
+
+### Step 4: Request Feedback (Mandatory)
+
+After writing the document, use the `AskUserQuestion` tool to ask:
+
+> "계획 문서를 작성했습니다. 수정하거나 보완할 부분이 있으신가요?
+> 특히 [단계 구성 / 누락된 항목 / 범위]에 대한 의견을 주시면 반영하겠습니다."
 
 Do NOT proceed to implementation without explicit approval.
-
----
-
-## Output Template
-
-```markdown
-# [Plan Title]
-
-## Overview
-[2-3 sentence summary of purpose and background]
-
-## Goals
-- [ ] [Outcome 1]
-- [ ] [Outcome 2]
-
-## Scope
-| Item | Included | Notes |
-|---|---|---|
-| [item] | ✅ / ❌ | [note] |
-
-## Step-by-Step Plan
-
-### Step 1: [Name]
-- **Purpose**: [what this step achieves]
-- **Tasks**:
-  - [ ] [task 1]
-  - [ ] [task 2]
-- **Output**: [deliverable]
-- **Dependencies**: [prerequisites]
-
-**Example:**
-\`\`\`[language]
-// code snippet showing the key implementation or structure
-[code]
-\`\`\`
-
-### Step 2: [Name]
-- **Purpose**: [what this step achieves]
-- **Tasks**:
-  - [ ] [task 1]
-  - [ ] [task 2]
-- **Output**: [deliverable]
-- **Dependencies**: [prerequisites]
-
-## Acceptance Criteria
-- [ ] [check 1]
-- [ ] [check 2]
-
-## Risks
-| Risk | Impact | Mitigation |
-|---|---|---|
-| [risk] | High/Med/Low | [action] |
-
-## Notes
-- [additional context or links]
-```
