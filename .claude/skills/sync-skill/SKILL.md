@@ -8,7 +8,8 @@ description: Syncs a skill from the global ~/.claude/skills/ into this project's
 
 # Sync Skill
 
-Copies or merges a skill from `~/.claude/skills/` into `claude/skills/` of the current project.
+Copies or merges a skill from `~/.claude/skills/` into `claude/skills/` of the current project,
+then propagates the result to `codex/skills/` if the same skill exists there.
 
 ## Usage
 
@@ -33,31 +34,32 @@ If ambiguous or not provided:
 
 ---
 
-### Step 2: Inspect Both Sides
+### Step 2: Inspect All Three Locations
 
 Run the following checks in parallel:
 
-1. **Global skill exists?**
-   - Path: `~/.claude/skills/{skill-name}/`
+1. **Global skill** — `~/.claude/skills/{skill-name}/`
    - List all files inside (SKILL.md, assets/, etc.)
 
-2. **Project skill exists?**
-   - Path: `claude/skills/{skill-name}/`
+2. **Project skill** — `claude/skills/{skill-name}/`
    - If it exists, read `SKILL.md` for comparison
+
+3. **Codex skill** — `codex/skills/{skill-name}/`
+   - Check if it exists; if so, read `SKILL.md`
 
 ---
 
-### Step 3: Determine Action
+### Step 3: Sync Global → claude/skills/
 
 | Situation | Action |
 |---|---|
-| Project skill does not exist | **Copy** all files from global to project |
-| Project skill exists, content identical | Report "이미 최신 상태입니다" — no changes needed |
+| Project skill does not exist | **Copy** all files from global to `claude/skills/` |
+| Project skill exists, content identical | No changes needed |
 | Project skill exists, content differs | **Merge** — see Step 4 |
 
 ---
 
-### Step 4: Merge (when both versions exist and differ)
+### Step 4: Merge (when global and claude/skills/ differ)
 
 Read both `SKILL.md` files fully, then produce a merged result:
 
@@ -67,7 +69,7 @@ Read both `SKILL.md` files fully, then produce a merged result:
 3. If a section exists only in one version, include it
 4. Never silently drop content — if two versions conflict in meaning, include both and add a comment `<!-- merged: check this section -->`
 
-Write the merged `SKILL.md` to `claude/skills/{skill-name}/SKILL.md`.
+Write the merged result to `claude/skills/{skill-name}/SKILL.md`.
 
 For asset files (e.g., `assets/*.md`):
 - If identical: no action
@@ -76,15 +78,37 @@ For asset files (e.g., `assets/*.md`):
 
 ---
 
-### Step 5: Report
+### Step 5: Propagate to codex/skills/
 
-After writing files, summarize:
+After `claude/skills/` is up to date, check `codex/skills/{skill-name}/`:
+
+| Situation | Action |
+|---|---|
+| `codex/skills/` does not have this skill | Skip (do not create) |
+| `codex/skills/` has the skill, content identical to `claude/skills/` | No changes needed |
+| `codex/skills/` has the skill, content differs | **Overwrite** `codex/skills/{skill-name}/SKILL.md` with the `claude/skills/` version |
+
+For asset files under `codex/skills/{skill-name}/assets/`:
+- If identical: no action
+- If missing: copy from `claude/skills/`
+- If different: overwrite with `claude/skills/` version
+
+---
+
+### Step 6: Report
+
+After all writes are complete, summarize:
 
 ```
 ## 동기화 결과: {skill-name}
 
+### claude/skills/
 - SKILL.md: [복사됨 / 병합됨 / 변경 없음]
-- assets/{file}: [복사됨 / 변경 없음 / 사용자 선택 필요]
+- assets/{file}: [복사됨 / 변경 없음]
+
+### codex/skills/
+- SKILL.md: [업데이트됨 / 변경 없음 / 해당 없음(스킬 없음)]
+- assets/{file}: [복사됨 / 변경 없음]
 
 변경된 내용:
 - [추가된 트리거 패턴]

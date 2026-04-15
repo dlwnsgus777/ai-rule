@@ -6,7 +6,7 @@ description: Writes a structured Markdown plan document for any task, feature, o
   Also trigger when the user says things like "[filename].md 만들어서 계획 작성",
   "task.md에 계획 써줘", "[파일명].md로 계획 정리", or any variation of
   "만들어서 계획을 작성" — i.e., when they want a plan written into a specific .md file.
-  Also trigger on "계획을 작성해줘", "계획 작성해줘", "계획 작성", "계획을 써줘",
+  Also trigger on "계획을 작성해줘", "계획 작성해줘", "계획 작성", "계획을 써줘", "계획 써줘",
   or any Korean sentence containing "계획" combined with a writing intent verb
   ("작성", "써줘", "정리", "만들어줘") — even if no specific file is mentioned.
 ---
@@ -43,13 +43,17 @@ Wait for answers before writing the plan.
 
 ### Step 3: Write the Plan Document
 
+**File Naming**: Determine the filename as follows:
+- If the user explicitly specified a filename (e.g., "ffs-contract-cancel.md에 작성해줘"), use that exact name.
+- Otherwise, default to `task-{feature}.md` where `{feature}` is a short kebab-case summary of the feature (e.g., `task-consultant-change-cancel.md`, `task-payment-refund.md`).
+
 Read and use the template from `assets/plan-template.md` — fill every section, omit only if truly not applicable.
 
 The template is structured for Spring Boot API feature planning:
 - **1. Feature Overview**: Include a screen/function composition table — one row per UI section or feature unit
 - **2. API Design**: One subsection per endpoint with Request/Response JSON examples; explicitly cover edge cases (null, empty, etc.)
 - **3. Business Logic**: Numbered subsections for each logic area; use a mapping table when status values or enums need display labels
-- **4. Implementation Files**: List target classes per module + a package directory tree
+- **4. Implementation Files**: List target classes per module + a package directory tree. After the table and tree, add a **"코드 스니핏"** subsection with skeleton code for each new or modified class — class/record declaration, field stubs, and key method signatures with brief inline comments. Base the snippets on the actual code patterns you found during Step 1. Snippets are scaffolding, not complete implementations, but they should be concrete enough that a developer can start coding immediately without re-reading the requirements.
 - **5. Considerations & Questions**: Numbered list of items needing confirmation, each with an alternative option if applicable
 - **6. Implementation Order (TDD)**: Checkbox list defining the build sequence
 - **7. Acceptance Criteria**: Final verification checklist
