@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775626385248,
+  "projectRoot": "/Users/finn/Desktop/private_study/ai-rule",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "claude": {
+      "path": "claude",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775626385231,
+      "keyFiles": []
+    },
+    "codex": {
+      "path": "codex",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775626385232,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "skills-setting-guide.md",
+      "accessCount": 3,
+      "lastAccessed": 1775626479813,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1775626470899,
+      "type": "directory"
+    },
+    {
+      "path": "claude/skills/test-driven-development/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775626480259,
+      "type": "file"
+    },
+    {
+      "path": "claude/skills/refactoring-plan/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775626480652,
+      "type": "file"
+    },
+    {
+      "path": "claude/skills/plan-creator/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775628361567,
+      "type": "file"
+    },
+    {
+      "path": "codex/skills/plan-creator/SKILL.md",
+      "accessCount": 1,
+      "lastAccessed": 1775628371681,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

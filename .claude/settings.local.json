@@ -5,7 +5,9 @@
       "Bash(git commit -m ':*)",
       "Bash(git push:*)",
       "Bash(mkdir -p /Users/finn/Desktop/private_study/ai-rule/.claude/skills/sync-skill)",
-      "Bash(cp /Users/finn/Desktop/private_study/ai-rule/claude/skills/sync-skill/SKILL.md /Users/finn/Desktop/private_study/ai-rule/.claude/skills/sync-skill/SKILL.md)"
+      "Bash(cp /Users/finn/Desktop/private_study/ai-rule/claude/skills/sync-skill/SKILL.md /Users/finn/Desktop/private_study/ai-rule/.claude/skills/sync-skill/SKILL.md)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
