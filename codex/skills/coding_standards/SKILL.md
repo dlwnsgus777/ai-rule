@@ -1,16 +1,3 @@
----
-name: coding-standards
-description: Enforce universal coding standards with focus on readability, simplicity, and long-term maintainability
-scope: code-writing, code-review
-priority: high
-auto_trigger: true
-version: 1.0
-assumptions:
-  - Code will be read and maintained by others
-  - Simplicity and clarity are more important than cleverness
-  - Premature abstraction is discouraged
----
-
 # Coding Standards
 
 ## AUTO-TRIGGER
