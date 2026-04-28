@@ -8,7 +8,10 @@
       "Bash(cp /Users/finn/Desktop/private_study/ai-rule/claude/skills/sync-skill/SKILL.md /Users/finn/Desktop/private_study/ai-rule/.claude/skills/sync-skill/SKILL.md)",
       "Bash(gh api:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(mkdir -p /Users/finn/Desktop/private_study/ai-rule/.claude/commands)",
+      "Bash(cp ~/.claude/commands/branch-review.md /Users/finn/Desktop/private_study/ai-rule/.claude/commands/branch-review.md)"
     ]
   }
 }
