@@ -1,3 +1,8 @@
+---
+name: backend-development-standards
+description: Analyze legacy backend systems with focus on business impact, stability, and long-term maintainability.
+---
+
 # Backend Development Standards
 
 ## AUTO-TRIGGER

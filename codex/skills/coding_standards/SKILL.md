@@ -1,3 +1,8 @@
+---
+name: coding-standards
+description: Enforce universal coding standards with focus on readability, simplicity, and long-term maintainability.
+---
+
 # Coding Standards
 
 ## AUTO-TRIGGER
