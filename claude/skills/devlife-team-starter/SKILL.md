@@ -18,7 +18,7 @@ version: 0.1.0
 
 # 개발인생 Agent Team
 
-Spawn Codex (`--full-auto`) in a cmux pane alongside the current Claude session. Skips creation if it's already running in the same workspace.
+Spawn Codex (`-a never`) in a cmux pane alongside the current Claude session. Skips creation if it's already running in the same workspace.
 
 ## Prerequisites
 
@@ -78,7 +78,7 @@ CODEX_SURFACE=$(echo "$CODEX_OUT" | grep -o 'surface:[0-9]*')
 
 # Wait for shell to initialize, then start codex
 sleep 0.5
-cmux send --surface "$CODEX_SURFACE" "codex --full-auto\n"
+cmux send --surface "$CODEX_SURFACE" "codex -a never\n"
 
 # Label the pane for future detection
 cmux rename-tab --surface "$CODEX_SURFACE" "Codex"
@@ -108,7 +108,8 @@ Display a summary to the user:
 Agent Team 구성 완료:
 ┌─────────────────┬─────────────────┐
 │                 │ Codex           │
-│  Claude (현재)   │ (--full-auto)   │
+│  Claude (현재)   │ (-a never)      │
+
 │                 │                 │
 └─────────────────┴─────────────────┘
 ```
