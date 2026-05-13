@@ -82,7 +82,11 @@ Spawn agent with Refactor prompt + current source/test files. Key inputs/outputs
 
 ### Cycle Summary and User Checkpoint
 
-After each cycle, present:
+⛔ **MANDATORY STOP after every task — including task 1.**
+
+After each task (RED→GREEN→REFACTOR cycle), you MUST:
+
+1. Present the cycle summary in this format:
 
 ```
 ── TDD Cycle {N} Complete ──
@@ -92,9 +96,18 @@ REFACTOR: ✅ {what changed / "no refactoring needed"}
 Tests: {N} passed, 0 failed
 
 [x] 1. {done}   [>] 2. {current}   [ ] 3. {next}
-
-Continue with task 2? (or modify remaining tasks)
 ```
+
+2. Request feedback using this exact format:
+
+> "이 구현에 대한 피드백을 주실 수 있으신가요?
+> 특히 [테스트 커버리지 / 구현 방식 / 설계 결정] 부분에 대한 의견을 주시면 반영하겠습니다."
+
+3. **Wait silently.** Do NOT proceed to the next task under any circumstance until the user sends an explicit approval message (e.g., "진행해", "다음", "계속", "LGTM", "ok", "좋아").
+
+4. If the user gives feedback without approving, incorporate the feedback and repeat this checkpoint.
+
+**There are NO exceptions to this rule.** Even if the next task is trivial, even if no issues were found — always stop and wait for explicit user approval before moving to the next task.
 
 If cmux is available: `cmux notify` on cycle complete (see `references/cmux-integration.md`).
 

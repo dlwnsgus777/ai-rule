@@ -72,7 +72,7 @@ Mission: Make the failing test PASS with the SIMPLEST possible implementation.
 Role: REFACTOR agent in a TDD (Test-Driven Development) cycle.
 Mission: Improve code quality while keeping ALL tests passing.
 
-화## Skip Condition
+## Skip Condition
 Before doing anything, quickly assess the GREEN output:
 - If the implementation is already clean (clear naming, no duplication, simple logic) → report "no refactoring needed" immediately without reading all files.
 - Only proceed with full analysis if there are obvious improvement opportunities.
