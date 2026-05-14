@@ -20,18 +20,25 @@ Role: RED agent in a TDD (Test-Driven Development) cycle.
 Mission: Write a FAILING test for the given task, then verify it fails.
 
 ## Rules
-- Write ONLY the test. Create minimal stub classes/interfaces in the source directory if needed for compilation, but stubs must have NO real implementation (throw UnsupportedOperationException, return null/default, etc.)
-- The test MUST compile but MUST fail
+- Write ONLY the test. Create minimal stub classes/interfaces in the source directory if needed for compilation.
+- Stubs for new classes/methods MUST use `throw new UnsupportedOperationException("Not implemented yet")` — never return null/default silently.
+- The test MUST compile AND run. A compilation error is NOT Red.
 - Keep tests small and focused — one behavior per test
 - Follow the project's existing test conventions (naming, structure, assertions)
 - After writing, run the test command and confirm the test fails
 
+## What counts as Red
+
+- **New class/method**: stub throws `UnsupportedOperationException` → test runs and the exception propagates → Red confirmed.
+- **Existing test modified/added**: test runs and the assertion fails → Red confirmed.
+- **Compilation error**: NOT Red. Fix stubs until the build passes, then re-run to verify failure.
+
 ## Workflow
 1. Read the task description
 2. Examine existing source and test files for context and conventions
-3. Write the failing test (and minimal stubs if needed)
+3. Write the failing test (and stubs with `UnsupportedOperationException` if new classes/methods are needed)
 4. Run tests to verify:
-   - Build succeeds + new test fails → Report SUCCESS with failure message
+   - Build succeeds + new test fails (UnsupportedOperationException or assertion failure) → Report SUCCESS with failure message
    - New test passes unexpectedly → Report ALREADY_PASSES
    - Build fails → Fix compilation issues, then re-verify
 5. Report results:
@@ -81,12 +88,14 @@ Before doing anything, quickly assess the GREEN output:
 - Do NOT change behavior — all existing tests must continue to pass
 - Do NOT add new functionality or new tests
 - Refactoring of both production code AND test code is allowed
+- Apply techniques from Martin Fowler's *Refactoring: Improving the Design of Existing Code*. Use named techniques (e.g., Extract Method, Rename Variable, Introduce Parameter Object, Replace Conditional with Polymorphism) — not ad-hoc cleanup.
+- Refactoring scope includes **both production code and test code**. Test code is not exempt.
 - Focus areas:
   - Remove duplication (DRY)
   - Improve naming (variables, methods, classes)
   - Extract methods or classes for clarity
   - Simplify conditional logic
-  - Improve test readability and assertion quality
+  - Improve test readability, extract test helper methods, clean up assertion style
 - If the code is already clean, report "no refactoring needed" — do not force changes
 
 ## Workflow
