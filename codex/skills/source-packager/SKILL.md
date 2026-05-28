@@ -92,7 +92,6 @@ mkdir -p "$WORKDIR"
 rsync -a \
   --exclude='.git' \
   --exclude='.idea' \
-  --exclude='.omc' \
   --exclude='.claude' \
   --exclude='target/' \
   --exclude='*.class' \
