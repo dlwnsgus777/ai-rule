@@ -22,6 +22,21 @@ If no skill name is given, ask the user which skill to sync using `AskUserQuesti
 
 ---
 
+## Scope
+
+동기화 대상 디렉토리:
+
+| 디렉토리 | 역할 | 싱크 대상 |
+|---|---|---|
+| `~/.claude/skills/` | 전역 소스 | 읽기 전용 (소스) |
+| `claude/skills/` | 프로젝트 Claude 스킬 | **대상** |
+| `codex/skills/` | 프로젝트 Codex 스킬 | **대상** (스킬이 존재할 때만) |
+| `.claude/skills/` | 현재 프로젝트의 Claude Code 설정 | **제외** — 절대 읽거나 쓰지 않음 |
+
+> `.claude/skills/`는 Claude Code 하네스가 관리하는 디렉토리이므로 싱크 대상에서 제외한다.
+
+---
+
 ## Process
 
 ### Step 1: Resolve Skill Name
