@@ -1,6 +1,6 @@
 ---
 name: TDD Team
-version: 0.4.0
+version: 0.5.0
 description: >
   Use this skill when the user wants to develop features using Test-Driven Development
   with an agentic Red-Green-Refactor cycle. Trigger on "start TDD", "do TDD",
@@ -16,104 +16,89 @@ description: >
 
 # TDD Team
 
-Orchestrate a 3-phase Red-Green-Refactor TDD cycle using sequential Agent calls. Each cycle implements one small behavior increment: write a failing test, make it pass with minimal code, then clean up.
+Orchestrate a 3-phase Red-Green-Refactor TDD cycle using sequential Agent calls. Each cycle implements one small behavior increment.
 
 ## Agent Roles
 
 | Agent | Phase | Responsibility |
 |-------|-------|----------------|
-| **red** | RED — Write failing test | Create a test that compiles but fails, then verify the failure |
-| **green** | GREEN — Make it pass | Implement the simplest code to make the test pass |
-| **refactor** | REFACTOR — Clean up | Improve code quality while keeping all tests passing |
+| **red** | RED | Write a failing test, verify it fails |
+| **green** | GREEN | Make it pass with minimal code |
+| **refactor** | REFACTOR | Improve quality, keep tests passing |
 
 ## Setup
 
-### 0. cmux (Optional)
+### 1. Resolve Skill Path
 
-If cmux is available, read `references/cmux-integration.md` to set up a 3-pane split layout (RED / GREEN / REFACTOR) on the right side and sidebar status indicators. Capture `RED_PANE`, `GREEN_PANE`, `REFACTOR_PANE` surface IDs for use throughout the session. Skip if cmux is not detected.
+This SKILL.md was loaded from a known absolute path. Capture its parent directory as `SKILL_DIR`. The agent prompts file is at:
 
-### 1. Detect Environment
+```
+{SKILL_DIR}/references/agent-prompts.md
+```
 
-Check for build files (`build.gradle.kts`, `pom.xml`, `package.json`, etc.) and determine the test command. Capture as environment context:
+### 2. Detect Environment
+
+Check for build files (`build.gradle.kts`, `pom.xml`, `package.json`, etc.) and determine the test command. Capture:
 
 ```
 PROJECT_ROOT / SOURCE_DIR / TEST_DIR / TEST_CMD / TEST_FRAMEWORK
-CMUX_ENABLED (true/false) / RED_PANE / GREEN_PANE / REFACTOR_PANE
 ```
 
-### 2. Identify Domain Invariants
+### 3. Identify Domain Invariants
 
-Before decomposing tasks, extract the business rules that must never be violated. Scan existing code (enum state transitions, validation annotations, guard clauses) and ask the user if anything is missing. Express each invariant as a complete declarative sentence:
+Scan existing code (enum state transitions, validation annotations, guard clauses) and express each business rule as a complete declarative sentence:
 
 > "결제 완료 상태로 전환된 주문의 금액은 어떠한 경우에도 변경될 수 없다."
-> "계약 해지 요청은 승인 완료 상태에서만 가능하다."
 
-These sentences become the **source of test names** in the TDD cycles that follow.
+Ask the user if anything is missing. These sentences become the source of test names.
 
-### 3. Decompose into TDD Tasks
+### 4. Decompose into TDD Tasks
 
-Break the feature into small, incremental behaviors — each becomes one TDD cycle. Name each task as a **domain rule sentence**, not a method signature. The task name will become the test's DisplayName directly.
+Name each task as a **domain rule sentence** — it becomes the test's `@DisplayName` directly.
 
 ```
-# Bad — implementation-focused
-1. add(1, 2) returns 3
-2. divide(10, 0) throws ArithmeticException
-
-# Good — domain-rule sentences
-1. 두 정수를 더하면 합계를 반환한다
-2. 0으로 나누면 계산을 거부한다
-3. 결제 완료된 주문은 취소할 수 없다
+# Bad: add(1, 2) returns 3
+# Good: 두 정수를 더하면 합계를 반환한다
 ```
 
-Present the invariant list and task list together, and get user confirmation before starting.
+Present invariants + task list and get user confirmation before starting.
 
 ## TDD Cycle Execution
 
-For each task, run three sequential Agent calls. Read `references/agent-prompts.md` for the full system prompts.
+For each task, spawn three sequential Agent calls. Each agent **reads its own prompt** directly from `{SKILL_DIR}/references/agent-prompts.md`.
 
-### RED Phase
+### Sub-agent Prompt Template
 
-Spawn agent with Red prompt + environment context + task description. Key inputs/outputs:
-- **Input**: task description, existing file paths
-- **Output**: test file path, method name, failure message
-- If test already passes → skip GREEN. If build fails → fix stubs, re-verify.
+```
+Read {SKILL_DIR}/references/agent-prompts.md — you have permission to access this file.
+Follow the "{PHASE} Agent Prompt" section exactly. ({PHASE} = RED | GREEN | REFACTOR)
 
-> ⚠️ **A compilation error is NOT Red.**
-> Red requires the test to actually run and fail. Two valid Red states:
-> - **New class/method**: stub exists with `throw new UnsupportedOperationException("Not implemented yet")` — test runs and throws this exception → Red confirmed.
-> - **Existing test modified/added**: test runs and the assertion fails → Red confirmed.
->
-> If the build fails, fix stubs until compilation passes, then verify the test failure.
+Task: {task description}
 
-### GREEN Phase
+Environment:
+- Project root: {PROJECT_ROOT}
+- Source dir:   {SOURCE_DIR}
+- Test dir:     {TEST_DIR}
+- Test command: {TEST_CMD}
+- Framework:    {TEST_FRAMEWORK}
+```
 
-Spawn agent with Green prompt + RED's failure output. Key inputs/outputs:
-- **Input**: failing test path, failure message
-- **Output**: files modified, all test results
-- Write the minimum code to pass. If still failing, retry with different approach.
+**GREEN**: append RED output — test file path, method name, failure message.
+**REFACTOR**: append RED+GREEN summary — files changed, test results.
 
-### REFACTOR Phase
+### Cycle Flow
 
-**Conditional execution**: Skip this phase if the GREEN implementation is already clean. Simple behaviors (basic arithmetic, simple returns, etc.) rarely need refactoring.
-
-Refactoring techniques must follow Martin Fowler's catalog (*Refactoring: Improving the Design of Existing Code*). Apply named techniques (e.g., Extract Method, Rename Variable, Replace Conditional with Polymorphism) rather than ad-hoc cleanup.
-
-Refactoring scope includes **both production code and test code**. Test code is not exempt — improve test readability, extract helper methods, and clean up assertion style as needed.
-
-Spawn agent with Refactor prompt + current source/test files. Key inputs/outputs:
-- **Input**: summary of RED+GREEN changes
-- **Output**: what changed and why (or "no refactoring needed"), final test results
-- Agent identifies ALL opportunities first, applies them in one batch, then runs tests once. Only falls back to incremental if the batch fails.
-
-**After REFACTOR completes (tests passing):** Commit all files touched during this TDD cycle (test files from RED, production files from GREEN, any refactored files). Use a conventional commit message: `feat: {task description}` (e.g., `feat: add(1, 2) returns 3`). Stage only the files that were actually modified in this cycle — do not stage unrelated changes.
+1. **RED** → capture test file path, method name, failure message
+   - `ALREADY_PASSES` → skip GREEN + REFACTOR, go to checkpoint
+   - Build fails → RED handles internally (fix stubs, re-verify)
+2. **GREEN** → capture files modified, all test results
+3. **REFACTOR** — skip if GREEN output is already clean
 
 ### Cycle Summary and User Checkpoint
 
 ⛔ **MANDATORY STOP after every task — including task 1.**
 
-After each task (RED→GREEN→REFACTOR cycle), you MUST:
-
-1. Present the cycle summary in this format:
+Present:
 
 ```
 ── TDD Cycle {N} Complete ──
@@ -125,28 +110,12 @@ Tests: {N} passed, 0 failed
 [x] 1. {done}   [>] 2. {current}   [ ] 3. {next}
 ```
 
-2. Request feedback using this exact format:
+Request feedback:
 
 > "이 구현에 대한 피드백을 주실 수 있으신가요?
 > 특히 [테스트 커버리지 / 구현 방식 / 설계 결정] 부분에 대한 의견을 주시면 반영하겠습니다."
 
-3. **Wait silently.** Do NOT proceed to the next task under any circumstance until the user sends an explicit approval message (e.g., "진행해", "다음", "계속", "LGTM", "ok", "좋아").
-
-4. If the user gives feedback without approving, incorporate the feedback and repeat this checkpoint.
-
-**There are NO exceptions to this rule.** Even if the next task is trivial, even if no issues were found — always stop and wait for explicit user approval before moving to the next task.
-
-If cmux is available: `cmux notify` on cycle complete (see `references/cmux-integration.md`).
-
-## Key Principles
-
-**Definition of Red** — Red means the build passes, the test runs, and the assertion fails. A compilation error is NOT Red. If the build fails, fix stubs until compilation passes, then verify the test failure.
-
-**Strict phase separation** — RED writes tests only, GREEN writes production code only, REFACTOR changes no behavior. This ensures tests genuinely validate behavior rather than passing alongside code written at the same time.
-
-**Simplest implementation first** — GREEN can hardcode values. Elegance comes from REFACTOR. If hardcoding passes the test, the test probably needs a stricter assertion.
-
-**One behavior per cycle** — Small steps build confidence and keep the feedback loop tight.
+**Wait silently.** Do NOT proceed until the user sends explicit approval ("진행해", "다음", "계속", "LGTM", "ok", "좋아"). No exceptions — even if the next task is trivial.
 
 ## Error Handling
 
@@ -158,10 +127,4 @@ If cmux is available: `cmux notify` on cycle complete (see `references/cmux-inte
 
 ## Session End
 
-Provide a final summary: cycles completed, files changed, final test count, next steps.
-If cmux was used, run cleanup from `references/cmux-integration.md`.
-
-## Reference Files
-
-- **`references/agent-prompts.md`** — Full prompts for Red, Green, and Refactor agents
-- **`references/cmux-integration.md`** — cmux pane layout and status commands (read only if cmux available)
+Final summary: cycles completed, files changed, final test count, next steps.
