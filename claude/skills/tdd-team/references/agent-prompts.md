@@ -46,6 +46,7 @@ If you wrote production code before a failing test existed — delete it. Do not
   }
   ```
 - Follow the project's existing test conventions (structure, assertions) — except for naming, which must follow the domain rule above
+- Test expectations come from the domain requirement in the task description, never from what the implementation currently does
 - After writing, run the test command and confirm the test fails
 - Structure every test with `// arrange`, `// act`, `// assert` comments
 
@@ -62,16 +63,20 @@ If you wrote production code before a failing test existed — delete it. Do not
 
 ## Workflow
 1. Read the task description
-2. Examine existing source and test files for context and conventions
+2. Read existing source files for structural context only (method signatures, class hierarchy, existing APIs). Read existing test files for conventions and fixture patterns. Ask "What SHOULD this behavior be?" not "What DOES this code do?"
 3. Write the failing test (and stubs with `UnsupportedOperationException` if new classes/methods are needed)
 4. Run tests to verify:
    - Build succeeds + new test fails (UnsupportedOperationException or assertion failure) → Report SUCCESS with failure message
    - New test passes unexpectedly → Report ALREADY_PASSES
    - Build fails → Fix compilation issues, then re-verify
-5. Report results:
-   - Test file path and test method name
-   - Failure message (or unexpected pass)
-   - Any stub files created
+5. Report results using EXACTLY this format — no additional explanation:
+```
+RED_RESULT
+test_file: {relative path to test file}
+test_method: {class#methodName}
+failure: {one-line failure message or "ALREADY_PASSES"}
+stubs: {comma-separated relative paths, or "none"}
+```
 ```
 
 ## GREEN Agent Prompt
@@ -101,9 +106,14 @@ Use project-defined Fixture builder methods — do NOT construct entities direct
    - All tests pass → Report SUCCESS
    - New test still fails → Analyze failure, adjust, retry
    - Other tests break → Revert changes, find a different approach
-5. Report results:
-   - Files modified and what changed
-   - All test results (pass count, any failures)
+5. Report results using EXACTLY this format — no additional explanation:
+```
+GREEN_RESULT
+files_modified: {comma-separated relative paths}
+tests_passed: {N}
+tests_failed: {N}
+failure_detail: {one-line summary if any failed, or "none"}
+```
 ```
 
 ## REFACTOR Agent Prompt
@@ -145,10 +155,13 @@ Apply named techniques from Martin Fowler's *Refactoring* catalog — not ad-hoc
    - Stage only the modified files (not unrelated changes)
    - Use conventional commit message: `feat: {task description}`
    - Example: `git add {files...} && git commit -m "feat: add(1, 2) returns 3"`
-7. Report results:
-   - What changed and why (or "no refactoring needed")
-   - Commit title (message only, no hash)
-   - Final test results
-   - Any deferred refactoring opportunities for future cycles
-   - Remaining TDD cycle list: if tasks remain, list them; if none remain, explicitly state "모든 사이클이 완료되었습니다."
+7. Report results using EXACTLY this format — no additional explanation:
+```
+REFACTOR_RESULT
+status: {REFACTORED | SKIPPED}
+reason: {one-line: what changed and why, or why skipped}
+commit: {conventional commit title, or "none"}
+tests_passed: {N}
+deferred: {one-line deferred opportunities, or "none"}
+```
 ```

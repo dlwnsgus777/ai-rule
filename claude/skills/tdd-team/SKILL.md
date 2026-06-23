@@ -4,9 +4,10 @@ version: 0.5.0
 description: >
   Use this skill when the user wants to develop features using Test-Driven Development
   with an agentic Red-Green-Refactor cycle. Trigger on "start TDD", "do TDD",
-  "TDD로 개발해줘", "TDD 시작", "TDD 팀 만들어", "테스트 주도 개발",
-  "red green refactor", "test-driven development", "테스트 먼저 작성하고 싶어",
-  "write tests first then implement", "테스트부터 짜줘", "TDD 방식으로 구현해줘".
+  "TDD로 개발해줘", "TDD로 구현해줘", "TDD로 만들어줘", "TDD 시작", "TDD 팀 만들어",
+  "테스트 주도 개발", "red green refactor", "test-driven development",
+  "테스트 먼저 작성하고 싶어", "write tests first then implement",
+  "테스트부터 짜줘", "TDD 방식으로 구현해줘".
   Also trigger when a user describes a feature and says they want it built incrementally
   with tests, e.g. "이 기능 테스트 먼저 만들고 하나씩 구현하자", "build this with
   failing tests first", or "한 단계씩 테스트 작성하면서 개발하고 싶어".
@@ -46,11 +47,31 @@ PROJECT_ROOT / SOURCE_DIR / TEST_DIR / TEST_CMD / TEST_FRAMEWORK
 
 ### 3. Identify Domain Invariants
 
-Scan existing code (enum state transitions, validation annotations, guard clauses) and express each business rule as a complete declarative sentence:
+**Source: PRD first, code second.**
+
+1. If the user has provided a PRD, ticket, or feature description — derive domain invariants exclusively from that. Do NOT scan code at this step.
+2. If no PRD is provided, ask: "구현할 기능의 요구사항이나 티켓 내용을 공유해주시겠어요?" and wait for the response.
+3. After extracting invariants from the PRD, scan existing code (enum state transitions, validation annotations, guard clauses) only to catch structural constraints the PRD may have omitted. Never let the code override PRD intent.
+
+Express each business rule as a complete declarative sentence that describes **what should be true**, not what the code currently does:
 
 > "결제 완료 상태로 전환된 주문의 금액은 어떠한 경우에도 변경될 수 없다."
 
-Ask the user if anything is missing. These sentences become the source of test names.
+Present the extracted invariants in this exact table format, then ask if anything is missing:
+
+```
+도메인 불변성 (비즈니스 규칙)
+
+  ┌─────┬─────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │                                     불변성                                      │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ 1   │ {invariant sentence}                                                            │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ 2   │ {invariant sentence}                                                            │
+  └─────┴─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+These sentences become the source of test names.
 
 ### 4. Decompose into TDD Tasks
 
@@ -61,17 +82,36 @@ Name each task as a **domain rule sentence** — it becomes the test's `@Display
 # Good: 두 정수를 더하면 합계를 반환한다
 ```
 
-Present invariants + task list and get user confirmation before starting.
+Present the task list in this format, then get user confirmation before starting:
+
+```
+TDD 태스크 목록
+
+  ┌─────┬─────────────────────────────────────────────────────────────────────────────────┐
+  │  #  │                                    태스크                                       │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ 1   │ {domain rule sentence → @DisplayName}                                           │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────┤
+  │ 2   │ {domain rule sentence → @DisplayName}                                           │
+  └─────┴─────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ## TDD Cycle Execution
 
-For each task, spawn three sequential Agent calls. Each agent **reads its own prompt** directly from `{SKILL_DIR}/references/agent-prompts.md`.
+> **BLOCKING REQUIREMENT — ORCHESTRATOR ONLY**: You are the orchestrator. After user confirmation, you MUST use the `Agent` tool for every RED / GREEN / REFACTOR step. Do NOT call `Edit`, `Write`, or `Read` on source or test files yourself. If you find yourself about to edit a file directly — stop and spawn an Agent instead.
 
-### Sub-agent Prompt Template
+For each task, call the `Agent` tool three times sequentially (RED → GREEN → REFACTOR). Each agent reads its own prompt from `{SKILL_DIR}/references/agent-prompts.md`.
+
+### Agent Tool Call Pattern
+
+Call the `Agent` tool exactly like this for each phase, substituting `{PHASE}` with RED, GREEN, or REFACTOR:
 
 ```
+Agent({
+  description: "{PHASE}: {task description}",
+  prompt: """
 Read {SKILL_DIR}/references/agent-prompts.md — you have permission to access this file.
-Follow the "{PHASE} Agent Prompt" section exactly. ({PHASE} = RED | GREEN | REFACTOR)
+Follow the "{PHASE} Agent Prompt" section exactly.
 
 Task: {task description}
 
@@ -81,10 +121,12 @@ Environment:
 - Test dir:     {TEST_DIR}
 - Test command: {TEST_CMD}
 - Framework:    {TEST_FRAMEWORK}
+"""
+})
 ```
 
-**GREEN**: append RED output — test file path, method name, failure message.
-**REFACTOR**: append RED+GREEN summary — files changed, test results.
+**GREEN**: append only the RED_RESULT block from RED output — do NOT include RED's reasoning or full output.
+**REFACTOR**: append only the GREEN_RESULT block from GREEN output — do NOT include GREEN's reasoning or full output.
 
 ### Cycle Flow
 
