@@ -1,0 +1,20 @@
+{
+  "name": "devlife-local",
+  "interface": {
+    "displayName": "Devlife Local"
+  },
+  "plugins": [
+    {
+      "name": "devlife-plugins",
+      "source": {
+        "source": "local",
+        "path": "./codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
