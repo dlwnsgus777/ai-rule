@@ -1,5 +1,5 @@
 ---
-name: tdd-team
+name: TDD Team
 version: 0.5.0
 description: >
   Use this skill when the user wants to develop features using Test-Driven Development
