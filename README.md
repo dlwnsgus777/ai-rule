@@ -11,10 +11,10 @@ TDD, PRD 작성, 브랜치 리뷰, 계획 수립, 멀티 에이전트 협업 등
 
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
+| [devlife-brainstorming](skills/devlife-brainstorming/SKILL.md) | 막연한 아이디어 → 구체적 설계 결정 도출 | "브레인스토밍", "아이디어 정리" |
 | [prd-creator](docs/prd-creator.md) | 대규모 기능의 PRD 문서 작성 | "PRD 작성해줘" |
 | [spec-creator](docs/spec-creator.md) | 대규모 기능의 기술 명세(Spec) 문서 작성 | "스펙 작성해줘" |
 | [plan-creator](docs/plan-creator.md) | 단일 태스크 구현 계획 문서 작성 | "계획 작성해줘" |
-| [plan-grill](docs/plan-grill.md) | 계획 작성 + 설계 검증 체인 | "계획 작성하고 검증해줘" |
 | [pdf-to-spec](docs/pdf-to-spec.md) | PDF → Spec 문서 변환 | "PDF 보고 spec 만들어줘" |
 | [project-history](docs/project-history.md) | Jira 티켓 기반 작업 이력 정리 | "RB-623 이력 정리해줘" |
 
@@ -33,13 +33,6 @@ TDD, PRD 작성, 브랜치 리뷰, 계획 수립, 멀티 에이전트 협업 등
 | [pr-review](docs/pr-review.md) | Bitbucket PR 리뷰 | "PR 리뷰해줘" |
 | [grill-me](docs/grill-me.md) | 설계/계획에 대한 집중 심문 인터뷰 | "grill me" |
 
-### Jira 연동
-
-| 스킬 | 설명 | 트리거 예시 |
-|------|------|------------|
-| [spec-workflow](docs/spec-workflow.md) | Spec → Jira 티켓 → Git 브랜치 전체 플로우 | "Jira 티켓 만들어줘" |
-| spec-to-jira | Spec → Jira 티켓 생성 (내부 스킬, spec-workflow에서 호출) | — |
-
 ### 유틸리티
 
 | 스킬 | 설명 | 트리거 예시 |
@@ -55,14 +48,11 @@ TDD, PRD 작성, 브랜치 리뷰, 계획 수립, 멀티 에이전트 협업 등
 
 ```
 기획 단계
+devlife-brainstorming → spec-creator → plan-creator → tdd-team
 prd-creator → plan-creator → tdd-team
-spec-creator → spec-workflow (Jira 티켓 + 브랜치 자동 생성)
 
 PDF 기반 기획
-pdf-to-spec → spec-workflow
-
-계획 검증
-plan-grill (plan-creator + grill-me 체인)
+pdf-to-spec → spec-creator → plan-creator
 
 코드 리뷰
 branch-review / pr-review

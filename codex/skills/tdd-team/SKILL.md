@@ -1,6 +1,5 @@
 ---
-name: TDD Team
-version: 0.5.0
+name: tdd-team
 description: >
   Use this skill when the user wants to develop features using Test-Driven Development
   with an agentic Red-Green-Refactor cycle. Trigger on "start TDD", "do TDD",
@@ -15,10 +14,16 @@ description: >
   tests, or debugging test failures — those are not TDD workflows.
 ---
 
-
 # TDD Team
 
-Orchestrate a 3-phase Red-Green-Refactor TDD cycle using sequential Agent calls. Each cycle implements one small behavior increment.
+Orchestrate a 3-phase Red-Green-Refactor TDD cycle. Each cycle implements one small behavior increment.
+
+## Codex Compatibility Rules
+
+- Respect system, developer, and project `AGENTS.md` instructions above this skill.
+- If project instructions require feedback after each stage, pause after RED, GREEN, REFACTOR, and review stages and ask for feedback before continuing.
+- Use Codex sub-agents for RED, GREEN, REFACTOR, cycle review, and final review. If the Codex sub-agent tool is not available, say `not available` and fall back to local execution.
+- In Codex, do not use Claude Code `Agent({ ... })`, `Read`, `Edit`, or `Write` tool names as literal tool calls. Use the available Codex tools and `apply_patch` for edits.
 
 ## Agent Roles
 
@@ -32,10 +37,15 @@ Orchestrate a 3-phase Red-Green-Refactor TDD cycle using sequential Agent calls.
 
 ### 1. Resolve Skill Path
 
-This SKILL.md was loaded from a known absolute path. Capture its parent directory as `SKILL_DIR`. The agent prompts file is at:
+This SKILL.md was loaded from a known absolute path. Capture its parent directory as `SKILL_DIR`.
+Phase-specific instruction files are in:
 
 ```
-{SKILL_DIR}/references/agent-prompts.md
+{SKILL_DIR}/references/red-agent.md
+{SKILL_DIR}/references/green-agent.md
+{SKILL_DIR}/references/refactor-agent.md
+{SKILL_DIR}/references/cycle-reviewer.md
+{SKILL_DIR}/references/final-reviewer.md
 ```
 
 ### 2. Detect Environment
@@ -48,7 +58,15 @@ PROJECT_ROOT / SOURCE_DIR / TEST_DIR / TEST_CMD / TEST_FRAMEWORK
 
 ### 3. Identify Domain Invariants
 
-**Source: PRD first, code second.**
+**If a plan document path is provided (from plan-creator):**
+
+1. Read the document
+2. Extract invariants from **Section 2 (Domain Context & Invariants)** — do not re-derive
+3. Extract the task list from **Section 7 (Implementation Order / TDD)** — use `[NEW]` tagged items as TDD tasks; skip `[REGRESSION]` items (they are existing tests to run, not new cycles)
+4. Present the task list in the format below and ask for confirmation before starting cycles
+5. Skip Steps 3 and 4 below entirely
+
+**If no plan document is provided — Source: PRD first, code second.**
 
 1. If the user has provided a PRD, ticket, or feature description — derive domain invariants exclusively from that. Do NOT scan code at this step.
 2. If no PRD is provided, ask: "구현할 기능의 요구사항이나 티켓 내용을 공유해주시겠어요?" and wait for the response.
@@ -99,96 +117,89 @@ TDD 태스크 목록
 
 ## TDD Cycle Execution
 
-> **BLOCKING REQUIREMENT — ORCHESTRATOR ONLY**: You are the orchestrator. After user confirmation, you MUST use the `Agent` tool for every RED / GREEN / REFACTOR step. Do NOT call `Edit`, `Write`, or `Read` on source or test files yourself. If you find yourself about to edit a file directly — stop and spawn an Agent instead.
+> **BLOCKING REQUIREMENT — TDD ORDER**: Do not write production implementation before a failing test has been written and verified.
 
-For each task, call the `Agent` tool three times sequentially (RED → GREEN → REFACTOR). Each agent reads only its own prompt file.
+For each task, execute RED → GREEN → REFACTOR in order using Codex sub-agents.
 
-### Agent Tool Call Pattern
+### Codex Sub-Agent Pattern
+
+Discover the available multi-agent tool with `tool_search`, then spawn one worker per phase sequentially.
+Each worker prompt must include:
+- The phase reference file path
+- The task description
+- The environment block
+- The previous phase result block where applicable
+- A warning that other agents or the user may have edited the workspace and unrelated changes must not be reverted
+
+If no Codex sub-agent tool is available, say `not available`, then execute the same phase locally:
+1. Read the relevant reference file for the phase.
+2. Follow that phase's workflow locally.
+3. Use `apply_patch` for file edits.
 
 **RED:**
 ```
-Agent({
-  description: "RED: {task description}",
-  prompt: """
 Read {SKILL_DIR}/references/red-agent.md — you have permission to access this file.
 Follow it exactly.
 
 Task: {task description}
-"""
-})
 ```
 
 **GREEN** (append only the RED_RESULT block — not RED's full output):
 ```
-Agent({
-  description: "GREEN: {task description}",
-  prompt: """
 Read {SKILL_DIR}/references/green-agent.md — you have permission to access this file.
 Follow it exactly.
 
 Task: {task description}
 
 {RED_RESULT block}
-"""
-})
 ```
 
 **REFACTOR** (append only the GREEN_RESULT block — not GREEN's full output):
 ```
-Agent({
-  description: "REFACTOR: {task description}",
-  prompt: """
 Read {SKILL_DIR}/references/refactor-agent.md — you have permission to access this file.
 Follow it exactly.
 
 Task: {task description}
 
 {GREEN_RESULT block}
-"""
-})
 ```
 
 ### Cycle Flow
 
 1. **RED** → capture test file path, method name, failure message
-   - `ALREADY_PASSES` → skip GREEN + REFACTOR, go to checkpoint
+   - `ALREADY_PASSES` → skip GREEN + REFACTOR, proceed to next task
    - Build fails → RED handles internally (fix stubs, re-verify)
 2. **GREEN** → capture files modified, all test results
 3. **REFACTOR** — skip if GREEN output is already clean
+4. **CYCLE REVIEWER** → use a Codex reviewer sub-agent
 
-### Cycle Summary and User Checkpoint
+### Cycle Reviewer Dispatch
 
-⛔ **MANDATORY STOP after every task — including task 1.**
+After REFACTOR completes, review the cycle with a Codex reviewer sub-agent.
 
-Before presenting the summary, verify the cycle is genuinely complete:
-
-- [ ] Every new function/method has a test
-- [ ] The test was watched to fail before implementation
-- [ ] The failure was for the expected reason (missing feature, not a typo or compile error)
-- [ ] Only minimal code was written to pass the test
-- [ ] All tests pass with pristine output (no warnings or noise)
-- [ ] Mocks were used only when unavoidable
-
-If any box is unchecked → do not present the summary. Escalate the gap to the relevant agent first.
-
-Present:
+1. Discover the available multi-agent tool with `tool_search`.
+2. Spawn a reviewer sub-agent with the prompt below.
+3. If no Codex sub-agent tool is available, say `not available`, then apply `references/cycle-reviewer.md` locally to the cycle diff.
 
 ```
-── TDD Cycle {N} Complete ──
-RED:      ✅ Test written: {method name}
-GREEN:    ✅ Implementation: {summary}
-REFACTOR: ✅ {what changed / "no refactoring needed"}
-Tests: {N} passed, 0 failed
+Read {SKILL_DIR}/references/cycle-reviewer.md — you have permission to access this file.
+Follow it exactly.
 
-[x] 1. {done}   [>] 2. {current}   [ ] 3. {next}
+Task: {task description}
+
+Domain Invariants (from plan Section 2):
+{invariants}
+
+Diff:
+{test code + implementation code written in this cycle}
 ```
 
-Request feedback:
+**Handle reviewer verdict:**
+- `APPROVED` → log progress, proceed to next task
+- `NEEDS_FIX` → use a Codex fix sub-agent for Critical/Important findings, then re-run cycle reviewer. If no Codex sub-agent tool is available, fix locally.
+  - Minor findings: log and continue
 
-> "이 구현에 대한 피드백을 주실 수 있으신가요?
-> 특히 [테스트 커버리지 / 구현 방식 / 설계 결정] 부분에 대한 의견을 주시면 반영하겠습니다."
-
-**Wait silently.** Do NOT proceed until the user sends explicit approval ("진행해", "다음", "계속", "LGTM", "ok", "좋아"). No exceptions — even if the next task is trivial.
+Follow project feedback gates between stages and cycles. If no feedback gate is required, continue through the task list without asking between cycles.
 
 ## Error Handling
 
@@ -198,6 +209,36 @@ Request feedback:
 | GREEN can't pass test | Retry with different approach |
 | REFACTOR breaks tests | Revert and try smaller changes |
 
+## Final Review
+
+After all cycles complete, run a final review with a Codex reviewer sub-agent.
+
+1. Discover the available multi-agent tool with `tool_search`.
+2. Spawn a reviewer sub-agent with the prompt below.
+3. If no Codex sub-agent tool is available, say `not available`, then apply `references/final-reviewer.md` locally to the plan and full branch diff.
+
+```
+Read {SKILL_DIR}/references/final-reviewer.md — you have permission to access this file.
+Follow it exactly.
+
+Plan document path: {plan_document_path}
+
+Branch diff:
+{full diff of all changes in this session}
+```
+
+**Handle final reviewer verdict:**
+- `APPROVED` → proceed to session end
+- `NEEDS_FIX` → use a Codex fix sub-agent with the complete findings list, then re-run final reviewer. If no Codex sub-agent tool is available, fix locally.
+
 ## Session End
 
-Final summary: cycles completed, files changed, final test count, next steps.
+Print a summary:
+
+```
+── TDD Session Complete ──
+Cycles: {N} completed
+Tests:  {N} passed, 0 failed
+Files:  {list of changed files}
+Review: APPROVED
+```

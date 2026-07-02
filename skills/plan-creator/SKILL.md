@@ -11,13 +11,33 @@ description: Writes a structured Markdown plan document for any task, feature, o
 
 # Plan Creator
 
+<!-- Chain: devlife-brainstorming → spec-creator → plan-creator → tdd-team -->
+
 ## Process
+
+### Document Input (Optional)
+
+If a spec document path is provided (from spec-creator or otherwise):
+
+1. Read the document before doing anything else
+2. Extract what is already defined: domain context, business invariants, subtask breakdown, scope
+3. In Step 2, skip questions whose answers are already clear from the document
+4. Use Section 2 (Domain Context & Invariants) of the spec as the foundation — do not re-derive invariants already stated there
+5. Identify which subtask this plan covers from the spec's task list
+
+If no document is provided, proceed to Step 1 as normal.
 
 ### Step 1: Context Gathering
 
-Delegate wide code discovery to an **Explore subagent** to protect the main context window from bulk search output.
+Use a Codex Explore sub-agent for wide code discovery:
+1. Discover the available multi-agent tool with `tool_search`.
+2. Spawn an explorer sub-agent with the prompt below.
+3. Ask for file paths and signatures only, no full implementations.
+4. If no Codex sub-agent tool is available, say `not available`, then perform targeted local discovery with `rg`, `rg --files`, and focused file reads.
 
-**Spawn an Explore subagent with the following prompt** (fill in `[feature domain]` based on the user's request):
+Do not use Claude Code `Agent({ ... })` syntax.
+
+Explorer prompt (fill in `[feature domain]` based on the user's request):
 
 > "Scan the [feature domain] in this project and report the following — file paths and signatures only, no full implementations:
 > 1. Controllers handling [feature] — file paths, endpoint annotations, method signatures
@@ -28,7 +48,7 @@ Delegate wide code discovery to an **Explore subagent** to protect the main cont
 > 6. Validation annotations or guard clauses that hint at business constraints
 > 7. Existing test classes in the same domain — class names and `@DisplayName` values or method names that already verify related behavior"
 
-**After the Explore subagent returns**, directly Read only the 2–3 most relevant files to identify business invariants (guard clauses, state transitions, validation annotations).
+After discovery, directly read only the 2–3 most relevant files to identify business invariants (guard clauses, state transitions, validation annotations).
 
 **Reusable code scan**: From the Explore results, identify existing services, utilities, and exception classes that already handle overlapping concerns. In particular, if "find-by-id + throw" patterns are encapsulated in a ReadService, inject that service rather than wiring a repository directly — reflect this in the code snippets.
 
@@ -49,10 +69,10 @@ Situations that require asking:
 
 **Important**: If you are unsure about any domain context or invariant, ask in this step. Do **not** defer to Step 3 and fill in the blanks with guesses.
 
-Ask through natural conversational text — do **not** use the `AskUserQuestion` tool for
-this step. Its multiple-choice/lettered-option format is too constrained for open-ended
-domain and invariant questions. (A lettered A/B/C list written as plain text is still fine
-for narrow scope decisions, if it helps clarity.)
+Ask through natural conversational text in normal assistant messages.
+Multiple-choice/lettered-option formats are too constrained for open-ended domain and
+invariant questions. (A lettered A/B/C list written as plain text is still fine for narrow
+scope decisions, if it helps clarity.)
 
 Ask in **rounds of up to 4 questions at a time**, in Korean. Wait for answers before
 starting the next round. Cover: goal/problem, affected modules, API style, data source,
@@ -95,12 +115,7 @@ Also extract invariants from code discovered in Step 1 — enum state transition
 
 #### TDD Test DisplayNames (Section 7)
 
-When listing test cases in the implementation order, name each test using a **domain rule sentence**, not a class or method name. The test list should read like a business specification.
-
-> Bad: `OrderCancelServiceTest — testCancel_WhenStatusIsPaid_ThrowsException`
-> Good: `OrderCancelServiceTest — "결제 완료된 주문은 취소할 수 없다"`
-
-The invariants you defined in Section 2 are the natural source for DisplayNames — each invariant is a candidate test name.
+When listing test cases in the implementation order, name each test using a **domain rule sentence**, not a class or method name. Invariants from Section 2 are natural candidates for DisplayNames.
 
 **Existing test check**: Before proposing a new test for each invariant, check whether an existing test (from the Explore results in Step 1) already verifies that behavior. Tag each entry accordingly:
 - `[NEW]` — no existing test covers this; write a new one
@@ -108,25 +123,51 @@ The invariants you defined in Section 2 are the natural source for DisplayNames 
 
 Never add a new test when an existing one already verifies the same business rule.
 
-The template is structured for Spring Boot API feature planning:
-- **0. Tidy First (코드 구조 정비)**: **기존 코드 수정 시에만 포함**. 정비 대상·기법(Extract Method, Guard Clause, Normalize Symmetry, Rename, Cohesion Ordering, Parameterize 등)·커밋 순서(`refactor` → `feat`)를 간결한 표 하나로 정리. 신규 파일만 추가하는 작업은 생략.
-- **1. Feature Overview**: Include a screen/function composition table — one row per UI section or feature unit
-- **2. Domain Context & Invariants**: Prose sentences for domain background; declarative sentences for business rules that must never be violated
-- **3. API Design**: One subsection per endpoint with Request/Response JSON examples; explicitly cover edge cases (null, empty, etc.)
-- **4. Business Logic**: Numbered subsections for each logic area; use a mapping table when status values or enums need display labels
-- **5. Implementation Files**: List target classes per module + a package directory tree. After the table and tree, add a **"코드 스니핏"** subsection with skeleton code for each new or modified class — class/record declaration, field stubs, and key method signatures with brief inline comments. Base the snippets on the actual code patterns you found during Step 1. Snippets are scaffolding, not complete implementations, but they should be concrete enough that a developer can start coding immediately without re-reading the requirements. **For `private final` dependency fields, prefer injecting existing services found in Step 1 over introducing new classes.**
-- **6. Considerations & Questions**: Numbered list of items needing confirmation, each with an alternative option if applicable
-- **7. Implementation Order (TDD)**: **When modifying existing code**, split into "Phase 1: Tidy First" and "Phase 2: Behavior Change". The tidy phase improves structure only with no behavior changes; commit separately before moving to the behavior phase. Each test uses domain-rule DisplayNames. Tag each entry with `[NEW]` or `[REGRESSION]` — `[REGRESSION]` means run the existing test as-is to confirm the behavior is preserved; never add a duplicate test.
-- **8. Acceptance Criteria**: Final verification checklist
+The template is structured for Spring Boot API feature planning. Non-obvious section requirements:
+- **0. Tidy First**: Only when modifying existing code. One table: target, technique (Extract Method, Guard Clause, etc.), commit order (`refactor` → `feat`).
+- **5. Implementation Files**: File table + package tree, then add a **"코드 스니핏" subsection** — class declaration, field stubs, key method signatures. For `private final` dependencies, prefer injecting existing services found in Step 1.
+- **7. Implementation Order**: When modifying existing code, split into Tidy First → Behavior Change phases with separate commits. Tag every entry `[NEW]` or `[REGRESSION]` — `[REGRESSION]` means run the existing test as-is; never add a duplicate.
 
 For non-API work (batch jobs, refactoring, etc.), omit sections that don't apply (e.g., API Design) and fill in the rest.
 
+### Step 3.5: Self-Review
+
+After writing the document, review it yourself before showing it to the user. Fix issues inline — no need to re-review after fixing.
+
+**1. Spec coverage** (spec 문서가 제공된 경우): 각 요구사항/불변성에 대응하는 구현 항목이 섹션 7에 있는가? 누락된 항목은 추가한다.
+
+**2. Placeholder scan**: 다음 패턴이 있으면 즉시 수정한다.
+- "TBD", "TODO", "추후 확인", "별도 확인 필요"
+- "적절한 예외 처리 추가" / "유효성 검증 추가" (구체적 내용 없이)
+- 코드 스니핏 없이 "구현한다"만 적힌 단계
+
+**3. DisplayName check**: 섹션 7의 테스트 이름이 메서드명이 아닌 도메인 규칙 문장인가?
+- Bad: `testCancelWhenPaid`
+- Good: `결제 완료된 주문은 취소할 수 없다`
+
+**4. Consistency**: 섹션 5의 클래스명/메서드명이 섹션 7의 코드 스니핏과 일치하는가?
+
 ### Step 4: Request Feedback (Mandatory)
 
-After writing the document, use the `AskUserQuestion` tool to ask:
+After writing the document, ask the user in a normal assistant message:
 
 > "계획 문서를 작성했습니다. 수정하거나 보완할 부분이 있으신가요?
 > 특히 [단계 구성 / 누락된 항목 / 범위]에 대한 의견을 주시면 반영하겠습니다."
 
 Do NOT proceed to implementation without explicit approval.
 
+### Step 5: Hand Off to tdd-team (Terminal State)
+
+Once feedback is incorporated and approved:
+
+> "계획 문서가 완성되었습니다. 이제 tdd-team을 사용해 구현을 시작하겠습니다."
+
+**REQUIRED**: If `tdd-team` is available, read its `SKILL.md` and continue with the plan document path as input. If it is not available, say `not available` and share the plan path.
+
+---
+
+**Standalone use**: If the user does not want to continue to tdd-team, ask:
+
+> "tdd-team으로 이어서 구현을 시작할까요, 아니면 여기서 마칠까요?"
+
+If they choose to stop, share the plan document path and exit.
