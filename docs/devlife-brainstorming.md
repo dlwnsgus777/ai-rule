@@ -1,13 +1,13 @@
 # devlife-brainstorming
 
 막연한 아이디어를 구체적인 설계 결정으로 전환합니다.  
-What/Why에 집중하고, How(구현 방법)는 spec-creator와 plan-creator에 위임합니다.
+What/Why에 집중하고, How(구현 방법)는 plan-creator에 위임합니다.
 
 ## 언제 사용하나요?
 
 - 아이디어는 있지만 무엇을 어떻게 만들어야 할지 불명확할 때
 - 기능의 범위, 대상 사용자, 성공 기준을 먼저 정리하고 싶을 때
-- spec-creator로 넘어가기 전에 방향을 잡고 싶을 때
+- plan-creator로 넘어가기 전에 방향을 잡고 싶을 때
 
 ## 트리거 문구
 
@@ -23,43 +23,53 @@ What/Why에 집중하고, How(구현 방법)는 spec-creator와 plan-creator에 
 ## 실행 흐름
 
 1. **프로젝트 컨텍스트 스캔** — 최근 커밋, 기존 spec/plan 문서 파악 (사용자에게 보고하지 않음)
-2. **대화형 탐색** — 핵심 문제, 대상 사용자, 성공 기준, 범위, 설계 결정, 제약사항을 **한 번에 하나씩** 질문
-3. **방향 선택지 제시** — 2-3가지 설계 방향과 트레이드오프 제시, 추천 방향 안내
-4. **Brainstorming 문서 작성** — `brainstorming-{topic}.md` 생성 (프로젝트 루트)
-5. **자체 검토 및 피드백** — 빈 섹션, 모순, 과도한 범위 확인 후 사용자 피드백 수집
+2. **Scope 크기 확인** — 여러 독립 서브시스템이 섞인 아이디어는 즉시 분해 제안, 첫 번째 sub-project부터 시작
+3. **대화형 탐색** — 핵심 문제, 대상 사용자, 성공 기준, 범위, 설계 결정, 제약사항을 **한 번에 하나씩** 질문
+4. **방향 선택지 제시** — 2-3가지 설계 방향과 트레이드오프 제시, 추천 방향 안내
+5. **설계 섹션 발표** — Architecture / Components / Data Flow / Error Handling / Testing 섹션을 하나씩 발표하고 승인 받음, 복잡도에 따라 깊이 조절
+6. **Design Spec 문서 작성** — `docs/brainstorming/YYYY-MM-DD-{topic}.md` 생성
+7. **셀프 리뷰** — 문서 작성 후 직접 검토: 플레이스홀더 없음, 일관성, 모호함 제거, YAGNI 준수 확인
+8. **사용자 리뷰 Gate** — 파일을 직접 열어 확인 후 명시적으로 '승인' 받기 전까지 다음 단계로 넘어가지 않음
+9. **plan-creator 핸드오프** — 승인 후 plan-creator로 이어서 진행 (기본값: 이어서)
 
 ## 생성 문서 구조
 
 ```
-brainstorming-{topic}.md
-├── Core Problem        ← 이 기능이 해결하는 문제 (2-3문장)
-├── Target Users        ← 누가, 어떤 상황에서 사용하는가
-├── Success Criteria    ← 잘 만들었다는 것을 어떻게 판단하는가
-├── Scope               ← In / Out 명시
+docs/brainstorming/YYYY-MM-DD-{topic}.md
+├── Core Problem         ← 이 기능이 해결하는 문제 (2-3문장)
+├── Target Users         ← 누가, 어떤 상황에서 사용하는가
+├── Success Criteria     ← 잘 만들었다는 것을 어떻게 판단하는가
+├── Scope                ← In / Out 명시
 ├── Key Design Decisions ← 선택한 방향과 트레이드오프
-└── Constraints         ← 기술/일정/비즈니스 제약 (해당 시)
+├── Architecture         ← 전체 구조, 레이어, 주요 모듈
+├── Components           ← 핵심 클래스/모듈, 책임, 인터페이스
+├── Data Flow            ← 데이터 흐름, 핵심 변환
+├── Error Handling       ← 실패 시나리오, 에러 경계, 복구 전략
+├── Testing Strategy     ← 테스트 전략, 핵심 시나리오
+└── Constraints          ← 기술/일정/비즈니스 제약 (해당 시)
 ```
 
 ## 핵심 원칙
 
-- **What/Why만** — 구현 방법(How)은 spec-creator와 plan-creator의 영역
+- **What/Why + 설계** — 방향/아키텍처/컴포넌트/데이터 흐름/에러 처리/테스트까지 커버; 구현 상세(How exactly)는 plan-creator 영역
+- **복잡도 스케일** — 섹션 깊이는 작업 복잡도에 맞춰 조절 (단순: 몇 문장, 복잡: 200-300 words)
 - **한 번에 하나씩** — 여러 질문을 한 메시지에 묶지 않음
+- **Scope 분해 우선** — 너무 큰 아이디어는 sub-project로 나눠 첫 번째부터 진행
+- **명시적 승인 Gate** — '승인' 확인 전까지 plan-creator로 넘어가지 않음
 - **추측하지 않음** — 불명확하면 묻고, 빈칸을 채우지 않음
 - **YAGNI** — 사용자가 언급하지 않은 범위는 추가하지 않음
 
 ## 워크플로우 위치
 
 ```
-devlife-brainstorming  ← 현재 위치
+devlife-brainstorming  ← 현재 위치 (what/why + design spec)
         ↓
-  spec-creator (기술 명세 + 하위 작업 분해)
-        ↓
-  plan-creator (태스크별 구현 계획)
+  plan-creator (구현 계획 — 파일/step/테스트/커밋 단위)
         ↓
     tdd-team (TDD 실행)
 ```
 
 ## 관련 스킬
 
-- [spec-creator](./spec-creator.md) — brainstorming 문서를 입력으로 받아 기술 명세 작성
+- [plan-creator](./plan-creator.md) — design spec 문서를 입력으로 받아 구현 계획 작성
 - [grill-me](./grill-me.md) — 정해진 방향을 검증하고 싶을 때

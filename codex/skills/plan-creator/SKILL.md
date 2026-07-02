@@ -11,13 +11,13 @@ description: Writes a structured Markdown plan document for any task, feature, o
 
 # Plan Creator
 
-<!-- Chain: devlife-brainstorming → spec-creator → plan-creator → tdd-team -->
+<!-- Chain: devlife-brainstorming → plan-creator → tdd-team -->
 
 ## Process
 
 ### Document Input (Optional)
 
-If a spec document path is provided (from spec-creator or otherwise):
+If a spec document path is provided (from devlife-brainstorming or otherwise):
 
 1. Read the document before doing anything else
 2. Extract what is already defined: domain context, business invariants, subtask breakdown, scope

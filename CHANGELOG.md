@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-07-02 (4)
+
+### devlife-planning
+
+| Skill | Version | Change |
+|-------|---------|--------|
+| `devlife-brainstorming` | `1.4.0` | 설계 섹션 발표 단계 추가 (Step 4: Architecture / Components / Data Flow / Error Handling / Testing), 문서 템플릿 확장, 핸드오프 대상을 spec-creator → plan-creator로 변경, 문서명 "Brainstorming" → "Design Spec" |
+
+---
+
+## 2026-07-02 (3)
+
+### devlife-planning
+
+| Skill | Version | Change |
+|-------|---------|--------|
+| `devlife-brainstorming` | `1.3.0` | 질문 언어를 한국어로 변경 (Ask in English → Ask in Korean) |
+
+---
+
+## 2026-07-02 (2)
+
+### devlife-planning
+
+| Skill | Version | Change |
+|-------|---------|--------|
+| `devlife-brainstorming` | `1.2.0` | 대화 언어를 영어로 변경 (질문, 안내 메시지, 승인 프롬프트 전체) |
+| `devlife-brainstorming` | `1.1.0` | Scope 분해 규칙 추가 (Step 1.5), 문서 저장 위치 변경 (`docs/brainstorming/YYYY-MM-DD-{topic}.md`), 사용자 리뷰 Gate 강화 (명시적 '승인' 필요), Step 7 Terminal State 명확화 |
+
+---
+
 ## 2026-07-02
 
 ### devlife-planning
